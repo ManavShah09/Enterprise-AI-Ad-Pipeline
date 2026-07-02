@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relay AI Ad Pipeline</title>
+    <meta name="description" content="AI-powered ad analysis and creative generation pipeline for Relay Human Cloud.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* ============================================= */
+        /* Design Tokens                                 */
+        /* ============================================= */
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2035;
+            --bg-card-hover: #1f2847;
+            --bg-glass: rgba(26, 32, 53, 0.7);
+            --bg-input: #0d1322;
+
+            --accent-primary: #6366f1;
+            --accent-primary-hover: #818cf8;
+            --accent-secondary: #06b6d4;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+            --accent-success: #10b981;
+            --accent-error: #ef4444;
+            --accent-warning: #f59e0b;
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --border-subtle: rgba(99, 102, 241, 0.15);
+            --border-active: rgba(99, 102, 241, 0.4);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ============================================= */
+        /* Reset & Base                                  */
+        /* ============================================= */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background gradient orbs */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent);
+            top: -200px;
+            left: -200px;
+        }
+
+        body::after {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.1), transparent);
+            bottom: -150px;
+            right: -150px;
+        }
+
+        /* ============================================= */
+        /* Layout                                        */
+        /* ============================================= */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================= */
+        /* Header                                        */
+        /* ============================================= */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(12px);
+        }
+
+        .header__badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* ============================================= */
+        /* Input Section                                 */
+        /* ============================================= */
+        .input-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+        }
+
+        .input-section:hover {
+            border-color: var(--border-active);
+        }
+
+        .input-section__label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .input-section__label svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-primary);
+        }
+
+        .textarea-wrapper {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 1.7;
+            resize: vertical;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .char-count {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ============================================= */
+        /* Action Bar                                    */
+        /* ============================================= */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn--primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn--primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn--secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn--secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-active);
+        }
+
+        .btn--secondary:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* ============================================= */
+        /* Progress / Status                             */
+        /* ============================================= */
+        .status-bar {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .status-bar.visible {
+            display: block;
+        }
+
+        .status-bar__inner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-bar__text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .status-bar__text strong {
+            color: var(--text-primary);
+        }
+
+        /* ============================================= */
+        /* Stage JSON Buttons                            */
+        /* ============================================= */
+        .stage-buttons {
+            display: none;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .stage-buttons.visible {
+            display: flex;
+        }
+
+        .stage-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .stage-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .stage-btn.active {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary-hover);
+        }
+
+        .stage-btn__dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .stage-btn.success .stage-btn__dot {
+            background: var(--accent-success);
+        }
+
+        .stage-btn.failed .stage-btn__dot {
+            background: var(--accent-error);
+        }
+
+        .stage-btn.pending .stage-btn__dot {
+            background: var(--text-muted);
+        }
+
+        /* ============================================= */
+        /* JSON Modal                                    */
+        /* ============================================= */
+        .json-panel {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            margin-bottom: 32px;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .json-panel.visible {
+            display: block;
+        }
+
+        .json-panel__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .json-panel__title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-primary-hover);
+        }
+
+        .json-panel__close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .json-panel__close:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .json-panel__body {
+            padding: 24px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .json-panel__body pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ============================================= */
+        /* Report Section                                */
+        /* ============================================= */
+        .report-section {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .report-section.visible {
+            display: block;
+        }
+
+        .report-section__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 28px;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .report-section__title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .report-section__actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .report-content {
+            padding: 32px;
+            line-height: 1.8;
+        }
+
+        /* ============================================= */
+        /* Markdown Styles                               */
+        /* ============================================= */
+        .report-content h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .report-content h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 32px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .report-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 8px;
+            color: var(--accent-primary-hover);
+        }
+
+        .report-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .report-content p {
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .report-content strong {
+            color: var(--text-primary);
+        }
+
+        .report-content blockquote {
+            border-left: 3px solid var(--accent-primary);
+            padding: 12px 20px;
+            margin: 12px 0;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .report-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-input);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--accent-secondary);
+        }
+
+        .report-content pre {
+            background: var(--bg-input);
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            margin: 12px 0;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .report-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .report-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+
+        .report-content th {
+            background: var(--bg-input);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-active);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .report-content td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .report-content tr:hover td {
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        .report-content ul,
+        .report-content ol {
+            padding-left: 24px;
+            margin-bottom: 12px;
+        }
+
+        .report-content li {
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .report-content hr {
+            border: none;
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 28px 0;
+        }
+
+        /* ============================================= */
+        /* Error Alert                                   */
+        /* ============================================= */
+        .error-alert {
+            display: none;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-md);
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            color: var(--accent-error);
+            font-size: 14px;
+        }
+
+        .error-alert.visible {
+            display: block;
+        }
+
+        /* ============================================= */
+        /* Scrollbar                                     */
+        /* ============================================= */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* ============================================= */
+        /* Responsive                                    */
+        /* ============================================= */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .report-content {
+                padding: 20px;
+            }
+        }
+
+        /* ============================================= */
+        /* Token Usage Card                              */
+        /* ============================================= */
+        .token-card {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+            margin-top: 32px;
+        }
+
+        .token-card.visible {
+            display: block;
+        }
+
+        .token-card__header {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .token-card__title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .token-card__body {
+            padding: 20px 24px;
+        }
+
+        .token-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .token-table th {
+            background: var(--bg-input);
+            padding: 10px 16px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-active);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .token-table th:first-child {
+            text-align: left;
+        }
+
+        .token-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .token-table td:first-child {
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .token-table tr:hover td {
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        .token-total-row td {
+            border-top: 2px solid var(--accent-primary);
+            border-bottom: none;
+            color: var(--accent-primary-hover);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__badge">
+                <span>Relay AI Pipeline</span>
+            </div>
+            <h1>Ad Analysis & Generation</h1>
+            <p>Paste an ad transcript to analyze its structure, taxonomy, strategy recipe, and generate a new Relay
+                Human Cloud advertisement.</p>
+        </header>
+
+        <!-- Input Section -->
+        <section class="input-section" id="inputSection">
+            <div class="input-section__label">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                </svg>
+                Ad Transcript
+            </div>
+            <div class="textarea-wrapper">
+                <textarea id="transcriptInput"
+                    placeholder="Paste your advertisement transcript here...&#10;&#10;Example: Are you considering adding new talent to your team? You might be looking into local hires or exploring overseas outsourcing, but there's a third option..."></textarea>
+                <div class="char-count" id="charCount">0 chars</div>
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="action-bar">
+            <button class="btn btn--primary" id="runBtn" onclick="runPipeline()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                </svg>
+                Run Pipeline
+            </button>
+            <button class="btn btn--secondary" id="downloadMdBtn" onclick="downloadReport()" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Download Report (.md)
+            </button>
+            <button class="btn btn--secondary" id="downloadJsonBtn" onclick="downloadJson()" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
+                </svg>
+                Download JSON
+            </button>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="error-alert" id="errorAlert"></div>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            <div class="status-bar__inner">
+                <div class="spinner"></div>
+                <div class="status-bar__text" id="statusText">
+                    <strong>Processing...</strong> Running Agentic pipeline. This may take 30–60 seconds.
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage JSON Buttons -->
+        <div class="stage-buttons" id="stageButtons">
+            <button class="stage-btn pending" id="stageBtn1" onclick="toggleStageJson(1)">
+                <span class="stage-btn__dot"></span>
+                Stage 1: Structuring
+            </button>
+            <button class="stage-btn pending" id="stageBtn2" onclick="toggleStageJson(2)">
+                <span class="stage-btn__dot"></span>
+                Stage 2: Taxonomy
+            </button>
+            <button class="stage-btn pending" id="stageBtn3" onclick="toggleStageJson(3)">
+                <span class="stage-btn__dot"></span>
+                Stage 3: Recipe
+            </button>
+            <button class="stage-btn pending" id="stageBtn4" onclick="toggleStageJson(4)">
+                <span class="stage-btn__dot"></span>
+                Stage 4: Creative
+            </button>
+        </div>
+
+        <!-- JSON Panel -->
+        <div class="json-panel" id="jsonPanel">
+            <div class="json-panel__header">
+                <span class="json-panel__title" id="jsonPanelTitle">Stage JSON</span>
+                <button class="json-panel__close" onclick="closeJsonPanel()">✕</button>
+            </div>
+            <div class="json-panel__body">
+                <pre id="jsonPanelContent"></pre>
+            </div>
+        </div>
+
+        <!-- Report Section -->
+        <section class="report-section" id="reportSection">
+            <div class="report-section__header">
+                <span class="report-section__title">📊 Pipeline Report</span>
+            </div>
+            <div class="report-content" id="reportContent"></div>
+        </section>
+
+        <!-- Token Usage Card -->
+        <section class="token-card" id="tokenCard">
+            <div class="token-card__header">
+                <span class="token-card__title">🔢 Token Usage</span>
+            </div>
+            <div class="token-card__body">
+                <table class="token-table">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Input Tokens</th>
+                            <th>Output Tokens</th>
+                            <th>Total Tokens</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tokenTableBody"></tbody>
+                    <tfoot>
+                        <tr class="token-total-row">
+                            <td><strong>TOTAL</strong></td>
+                            <td id="totalInput">—</td>
+                            <td id="totalOutput">—</td>
+                            <td id="totalTokens">—</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // =============================================
+        // State
+        // =============================================
+        let pipelineResult = null;
+        let activeStage = null;
+
+        const textarea = document.getElementById('transcriptInput');
+        const charCount = document.getElementById('charCount');
+
+        // Character counter
+        textarea.addEventListener('input', () => {
+            charCount.textContent = `${textarea.value.length} chars`;
+        });
+
+        // =============================================
+        // Run Pipeline
+        // =============================================
+        async function runPipeline() {
+            const transcript = textarea.value.trim();
+            if (!transcript) {
+                showError('Please paste an ad transcript before running the pipeline.');
+                return;
+            }
+
+            // Reset UI
+            hideError();
+            showStatus();
+            hideReport();
+            hideStageButtons();
+            hideJsonPanel();
+            hideTokenCard();
+            setButtonsLoading(true);
+
+            try {
+                const response = await fetch('/api/pipeline', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transcript }),
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || `Server error: ${response.status}`);
+                }
+
+                pipelineResult = await response.json();
+                renderResult(pipelineResult);
+
+            } catch (err) {
+                showError(`Pipeline failed: ${err.message}`);
+            } finally {
+                hideStatus();
+                setButtonsLoading(false);
+            }
+        }
+
+        // =============================================
+        // Render Result
+        // =============================================
+        function renderResult(result) {
+            // Render markdown report
+            if (result.report) {
+                const reportEl = document.getElementById('reportContent');
+                reportEl.innerHTML = marked.parse(result.report);
+                showReport();
+            }
+
+            // Update stage buttons
+            updateStageButtons(result);
+            showStageButtons();
+
+            // Render token usage
+            if (result.token_usage) {
+                renderTokenUsage(result.token_usage);
+            }
+
+            // Enable download buttons
+            document.getElementById('downloadMdBtn').disabled = false;
+            document.getElementById('downloadJsonBtn').disabled = false;
+        }
+
+        function renderTokenUsage(tokenUsage) {
+            const perStage = tokenUsage.per_stage || {};
+            const total = tokenUsage.total || { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+
+            const stageNames = {
+                stage_1: 'Stage 1: Structuring',
+                stage_2: 'Stage 2: Taxonomy',
+                stage_3: 'Stage 3: Recipe',
+                stage_4: 'Stage 4: Creative',
+            };
+
+            const tbody = document.getElementById('tokenTableBody');
+            tbody.innerHTML = '';
+
+            for (const [key, name] of Object.entries(stageNames)) {
+                const usage = perStage[key] || { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td>${usage.input_tokens.toLocaleString()}</td>
+                    <td>${usage.output_tokens.toLocaleString()}</td>
+                    <td>${usage.total_tokens.toLocaleString()}</td>
+                `;
+                // Gray out stages with 0 tokens
+                if (usage.total_tokens === 0) {
+                    row.style.opacity = '0.4';
+                }
+                tbody.appendChild(row);
+            }
+
+            document.getElementById('totalInput').innerHTML = `<strong>${total.input_tokens.toLocaleString()}</strong>`;
+            document.getElementById('totalOutput').innerHTML = `<strong>${total.output_tokens.toLocaleString()}</strong>`;
+            document.getElementById('totalTokens').innerHTML = `<strong>${total.total_tokens.toLocaleString()}</strong>`;
+
+            document.getElementById('tokenCard').classList.add('visible');
+        }
+
+        function updateStageButtons(result) {
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`stageBtn${i}`);
+                const output = result[`stage_${i}_output`];
+
+                btn.classList.remove('success', 'failed', 'pending');
+
+                if (output) {
+                    btn.classList.add('success');
+                } else if (result.error && result.error.stage === i) {
+                    btn.classList.add('failed');
+                } else if (result.error && result.error.stage < i) {
+                    btn.classList.add('pending');
+                } else {
+                    btn.classList.add('pending');
+                }
+            }
+        }
+
+        // =============================================
+        // Stage JSON Panel
+        // =============================================
+        function toggleStageJson(stageNum) {
+            if (activeStage === stageNum) {
+                closeJsonPanel();
+                return;
+            }
+
+            if (!pipelineResult) return;
+
+            const output = pipelineResult[`stage_${stageNum}_output`];
+            const stageNames = {
+                1: 'Stage 1: Transcript Structuring',
+                2: 'Stage 2: Taxonomy Tagging',
+                3: 'Stage 3: Ad Strategy Recipe',
+                4: 'Stage 4: Ad Creative Generation',
+            };
+
+            const panel = document.getElementById('jsonPanel');
+            const title = document.getElementById('jsonPanelTitle');
+            const content = document.getElementById('jsonPanelContent');
+
+            if (!output) {
+                title.textContent = `${stageNames[stageNum]} — Not Available`;
+                content.textContent = 'This stage did not produce output (pipeline may have failed before reaching it).';
+            } else {
+                title.textContent = stageNames[stageNum];
+                content.textContent = JSON.stringify(output, null, 2);
+            }
+
+            // Update active state
+            document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`stageBtn${stageNum}`).classList.add('active');
+
+            panel.classList.add('visible');
+            activeStage = stageNum;
+        }
+
+        function closeJsonPanel() {
+            document.getElementById('jsonPanel').classList.remove('visible');
+            document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+            activeStage = null;
+        }
+
+        // =============================================
+        // Downloads
+        // =============================================
+        function downloadReport() {
+            if (!pipelineResult || !pipelineResult.report) return;
+
+            const blob = new Blob([pipelineResult.report], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ad_pipeline_report_${Date.now()}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadJson() {
+            if (!pipelineResult) return;
+
+            const blob = new Blob([JSON.stringify(pipelineResult, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ad_pipeline_result_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // =============================================
+        // UI Helpers
+        // =============================================
+        function showError(msg) {
+            const el = document.getElementById('errorAlert');
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+
+        function hideError() {
+            document.getElementById('errorAlert').classList.remove('visible');
+        }
+
+        function showStatus() {
+            document.getElementById('statusBar').classList.add('visible');
+        }
+
+        function hideStatus() {
+            document.getElementById('statusBar').classList.remove('visible');
+        }
+
+        function showReport() {
+            document.getElementById('reportSection').classList.add('visible');
+        }
+
+        function hideReport() {
+            document.getElementById('reportSection').classList.remove('visible');
+        }
+
+        function showStageButtons() {
+            document.getElementById('stageButtons').classList.add('visible');
+        }
+
+        function hideStageButtons() {
+            document.getElementById('stageButtons').classList.remove('visible');
+        }
+
+        function hideJsonPanel() {
+            document.getElementById('jsonPanel').classList.remove('visible');
+            activeStage = null;
+        }
+
+        function hideTokenCard() {
+            document.getElementById('tokenCard').classList.remove('visible');
+        }
+
+        function setButtonsLoading(loading) {
+            document.getElementById('runBtn').disabled = loading;
+            if (loading) {
+                document.getElementById('runBtn').innerHTML = `
+                    <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+                    Running Pipeline...
+                `;
+            } else {
+                document.getElementById('runBtn').innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
+                    Run Pipeline
+                `;
+            }
+        }
+    </script>
+</body>
+
+</html>
